@@ -45,8 +45,6 @@ DEAD_LO, DEAD_HI = 5.0, 95.0   # mrtve zone
 N_AVG = 4                      # pokretni prosek 4 odbirka
 SDC_EXTRA = 100                # ECU otvara SDC ako FAULT traje još 100 ms
 
-C_S1, C_S2, C_OUT, C_FAULT = "#2a78d6", "#eb6834", "#1baf7a", "#d03b3b"
-C_INK, C_MUTED, C_GRID = "#0b0b0b", "#52514e", "#e1e0d9"
 
 
 # --------------------------------------------------------------------------- model
@@ -229,10 +227,14 @@ def style(ax):
     for s_ in ("top", "right"):
         ax.spines[s_].set_visible(False)
     for s_ in ("left", "bottom"):
-        ax.spines[s_].set_color("#c3c2b7")
-    ax.tick_params(colors=C_MUTED, labelsize=8.5)
-    ax.grid(True, color=C_GRID, linewidth=0.6)
-    ax.set_axisbelow(True)
+        ax.spines[s_].set_color("black")
+        ax.spines[s_].set_linewidth(0.7)
+    ax.tick_params(colors="black", labelsize=8, width=0.6, length=3)
+
+
+def dc(text):
+    """Decimalni zarez."""
+    return text.replace(".", ",")
 
 
 def fig_transfer(path):
@@ -241,35 +243,31 @@ def fig_transfer(path):
     p = np.linspace(0, 100, 101)
     v1, v2 = sensor_v(p)
     mv = MARG / 100 * SPAN
-    ax.axhspan(V1_0 - mv, V1_100 + mv, color=C_S1, alpha=0.08, lw=0)
-    ax.axhspan(V2_0 - mv, V2_100 + mv, color=C_S2, alpha=0.08, lw=0)
-    for v, c in ((V1_0 - mv, C_S1), (V1_100 + mv, C_S1), (V2_0 - mv, C_S2), (V2_100 + mv, C_S2)):
-        ax.axhline(v, color=c, lw=0.7, ls=(0, (2, 2)), alpha=0.8)
-    ax.plot(p, v1, color=C_S1, lw=2)
-    ax.plot(p, v2, color=C_S2, lw=2)
-    ax.axhline(0.5, color=C_MUTED, lw=0.8, ls=(0, (4, 3)))
-    ax.axhline(4.5, color=C_MUTED, lw=0.8, ls=(0, (4, 3)))
-    ax.text(101.5, v1[-1], "APPS1", fontsize=9, va="center", color=C_INK)
-    ax.text(101.5, v2[-1], "APPS2", fontsize=9, va="center", color=C_INK)
-    y1, y2 = sensor_v(30)
-    ax.annotate("", xy=(30, y2), xytext=(30, y1), arrowprops=dict(arrowstyle="<->", color=C_MUTED, lw=1))
-    ax.text(62, 1.45, "razmak 0,57 V: kratak spoj između\nsignala daje razliku ≥ 20 p.p.",
-            fontsize=7.5, color=C_MUTED, va="center")
-    ax.annotate("", xy=(31, (y1 + y2) / 2), xytext=(61, 1.45),
-                arrowprops=dict(arrowstyle="-", color=C_MUTED, lw=0.6, ls=(0, (2, 2))))
-    ax.text(40, V1_0 - mv + 0.03, ("prozor APPS1: %.2f–%.2f V" % (V1_0 - mv, V1_100 + mv)).replace(".", ","),
-            fontsize=7.5, color=C_S1, va="bottom")
-    ax.text(1, V2_100 + mv + 0.04, ("prozor APPS2: %.2f–%.2f V" % (V2_0 - mv, V2_100 + mv)).replace(".", ","),
-            fontsize=7.5, color=C_S2, va="bottom")
-    ax.text(99, 0.44, "granica senzora 0,5 V", fontsize=7, color=C_MUTED, ha="right", va="top")
-    ax.text(99, 4.56, "granica senzora 4,5 V", fontsize=7, color=C_MUTED, ha="right", va="bottom")
-    ax.text(50, 0.12, "0 V: prekid žice ili kratak spoj na masu", fontsize=7.5, color=C_FAULT, ha="center")
-    ax.text(50, 4.88, "5 V: kratak spoj na napajanje senzora", fontsize=7.5, color=C_FAULT, ha="center")
+    ax.plot(p, v1, color="black", lw=1.5, ls="-")
+    ax.plot(p, v2, color="black", lw=1.5, ls=(0, (5, 3)))
+    for v in (0.5, 4.5):                                   # granice izlaza senzora
+        ax.axhline(v, color="#888888", lw=0.7)
+    for v in (V1_0 - mv, V1_100 + mv, V2_0 - mv, V2_100 + mv):   # granice dozvoljenih opsega
+        ax.axhline(v, color="#888888", lw=0.6, ls=(0, (1, 2)))
+    ax.text(101.5, v1[-1], "APPS1", fontsize=8.5, va="center")
+    ax.text(101.5, v2[-1], "APPS2", fontsize=8.5, va="center")
+    y1, y2 = sensor_v(60)
+    ax.annotate("", xy=(60, y2), xytext=(60, y1), arrowprops=dict(arrowstyle="<->", color="black", lw=0.8))
+    ax.annotate("razmak 0,57 V", xy=(60, (y1 + y2) / 2), xytext=(36, 3.75), fontsize=7.5, va="center",
+                arrowprops=dict(arrowstyle="-", color="black", lw=0.5, shrinkA=2, shrinkB=0))
+    ax.text(1, V1_100 + mv + 0.04, dc("granice APPS1: %.2f i %.2f V" % (V1_0 - mv, V1_100 + mv)),
+            fontsize=7, color="#444444", va="bottom")
+    ax.text(1, V2_100 + mv + 0.04, dc("granice APPS2: %.2f i %.2f V" % (V2_0 - mv, V2_100 + mv)),
+            fontsize=7, color="#444444", va="bottom")
+    ax.text(99, 0.45, "granica senzora 0,5 V", fontsize=7, color="#444444", ha="right", va="top")
+    ax.text(99, 4.55, "granica senzora 4,5 V", fontsize=7, color="#444444", ha="right", va="bottom")
+    ax.text(50, 0.12, "0 V: prekid žice ili kratak spoj na masu", fontsize=7, ha="center")
+    ax.text(50, 4.85, "5 V: kratak spoj na napajanje senzora", fontsize=7, ha="center")
     ax.set_xlim(0, 112)
     ax.set_ylim(0, 5.1)
     ax.set_xticks(range(0, 101, 20))
-    ax.set_xlabel("Hod pedale [%]", fontsize=9, color=C_MUTED)
-    ax.set_ylabel("Izlaz senzora [V]", fontsize=9, color=C_MUTED)
+    ax.set_xlabel("Hod pedale [%]", fontsize=8.5)
+    ax.set_ylabel("Izlaz senzora [V]", fontsize=8.5)
     fig.tight_layout()
     fig.savefig(path, facecolor="white")
     plt.close(fig)
@@ -288,86 +286,82 @@ def fig_sim(results, path):
                 j = i
                 while j < f.size and f[j]:
                     j += 1
-                ax.axvspan(ts[i], ts[j - 1], color=C_FAULT, alpha=0.09, lw=0)
-                ax.text((ts[i] + ts[j - 1]) / 2, 113, "FAULT", color=C_FAULT, fontsize=8,
-                        ha="center", va="center", fontweight="bold")
+                ax.axvspan(ts[i], ts[j - 1], color="#e6e6e6", lw=0)
+                ax.text((ts[i] + ts[j - 1]) / 2, 113, "FAULT", fontsize=7.5, ha="center", va="center")
                 i = j
             i += 1
-        ax.axvline(T_FAULT / 1000.0, color=C_MUTED, lw=0.8, ls=(0, (3, 3)))
-        ax.plot(ts, np.clip(r["p1"], -20, 125), color=C_S1, lw=1.4, label="APPS1")
-        ax.plot(ts, np.clip(r["p2"], -20, 125), color=C_S2, lw=1.4, label="APPS2")
-        ax.plot(ts, r["out"], color=C_OUT, lw=2.0, label="izlaz ka ECU")
+        ax.axvline(T_FAULT / 1000.0, color="black", lw=0.6, ls=(0, (2, 2)))
+        ax.plot(ts, np.clip(r["p1"], -20, 125), color="#777777", lw=1.2, ls="-", label="APPS1")
+        ax.plot(ts, np.clip(r["p2"], -20, 125), color="black", lw=1.2, ls=(0, (4, 2)), label="APPS2")
+        ax.plot(ts, r["out"], color="black", lw=2.0, ls="-", label="izlaz ka ECU")
         ax.set_ylim(-22, 127)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.set_xlim(1.6, ts[-1])
         det = ("FAULT posle %d ms" % r["t_det"]) if r["t_det"] is not None else "bez FAULT-a"
-        ax.set_title("%s\n%s" % (r["name"], det), fontsize=8.6, color=C_INK, loc="left")
-        ax.set_xlabel("Vreme [s]", fontsize=8.3, color=C_MUTED)
-        ax.set_ylabel("Položaj [%]", fontsize=8.3, color=C_MUTED)
+        ax.set_title("%s\n%s" % (r["name"], det), fontsize=8, loc="left")
+        ax.set_xlabel("Vreme [s]", fontsize=8)
+        ax.set_ylabel("Položaj [%]", fontsize=8)
     h, l = axes[0, 0].get_legend_handles_labels()
-    fig.legend(h, l, loc="upper center", ncol=3, frameon=False, fontsize=8.5, bbox_to_anchor=(0.5, 1.0))
+    fig.legend(h, l, loc="upper center", ncol=3, frameon=False, fontsize=8, bbox_to_anchor=(0.5, 1.0))
     fig.tight_layout(rect=(0, 0, 1, 0.97))
     fig.savefig(path, facecolor="white")
     plt.close(fig)
 
 
 def fig_block(path):
-    from matplotlib.patches import FancyBboxPatch
+    from matplotlib.patches import Rectangle
     fig, ax = plt.subplots(figsize=(7.4, 3.6), dpi=200)
     ax.set_xlim(0, 100)
     ax.set_ylim(0, 50)
     ax.axis("off")
 
-    def box(x, y, w, h, title, sub="", fc="#f3f3f3", ec="#898781", fs=8.3):
-        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.2,rounding_size=1.0",
-                                    fc=fc, ec=ec, lw=1.0))
-        ax.text(x + w / 2, y + h / 2 + (1.5 if sub else 0), title, ha="center", va="center",
-                fontsize=fs, color=C_INK, fontweight="bold")
+    def box(x, y, w, h, title, sub="", fs=8.3):
+        ax.add_patch(Rectangle((x, y), w, h, fc="white", ec="black", lw=0.8))
+        ax.text(x + w / 2, y + h / 2 + (1.5 if sub else 0), title, ha="center", va="center", fontsize=fs)
         if sub:
-            ax.text(x + w / 2, y + h / 2 - 2.0, sub, ha="center", va="center", fontsize=6.5, color=C_MUTED)
+            ax.text(x + w / 2, y + h / 2 - 2.0, sub, ha="center", va="center", fontsize=6.5, color="#444444")
 
     def arrow(x0, y0, x1, y1, text="", dy=1.0, both=False):
         ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
-                    arrowprops=dict(arrowstyle="<|-|>" if both else "-|>", color="#52514e", lw=1.1,
-                                    shrinkA=0, shrinkB=0, mutation_scale=9))
+                    arrowprops=dict(arrowstyle="<|-|>" if both else "-|>", color="black", lw=0.8,
+                                    shrinkA=0, shrinkB=0, mutation_scale=8))
         if text:
-            ax.text((x0 + x1) / 2, max(y0, y1) + dy, text, ha="center", va="bottom", fontsize=6.3,
-                    color=C_MUTED)
+            ax.text((x0 + x1) / 2, max(y0, y1) + dy, text, ha="center", va="bottom", fontsize=6.3)
 
     # okvir čvora
-    ax.add_patch(FancyBboxPatch((24.5, 2), 39.5, 45, boxstyle="round,pad=0.2,rounding_size=1.5",
-                                fc="white", ec="#c3c2b7", lw=1.0, ls=(0, (5, 3))))
-    ax.text(44.25, 45.3, "APPS čvor (pored pedale)", ha="center", va="center", fontsize=7.5, color=C_MUTED)
+    ax.add_patch(Rectangle((24.5, 2), 39.5, 45, fc="none", ec="#888888", lw=0.7, ls=(0, (4, 3))))
+    ax.text(44.25, 45.3, "APPS čvor (pored pedale)", ha="center", va="center", fontsize=7.5, color="#444444")
 
-    box(1, 30, 13, 9, "APPS1", "RTY090", fc="#e3eefb", ec=C_S1)
-    box(1, 14, 13, 9, "APPS2", "RTY090", fc="#fde9e0", ec=C_S2)
-    ax.text(7.5, 26.5, "pedala →" + chr(10) + "2 poluge", ha="center", va="center",
-            fontsize=6.5, color=C_MUTED)
+    box(1, 30, 13, 9, "APPS1", "RTY090")
+    box(1, 14, 13, 9, "APPS2", "RTY090")
+    ax.text(7.5, 26.5, "pedala →" + chr(10) + "2 poluge", ha="center", va="center", fontsize=6.5, color="#444444")
 
     box(27, 30, 12, 9, "Ulaz 1", "razdelnik + RC")
     box(27, 14, 12, 9, "Ulaz 2", "razdelnik + RC")
     box(27, 4, 12, 7, "Napajanje", "12 V → 5 V")
     box(45, 14, 16, 25, "STM32F103", "ADC 12 bit" + chr(10) + "provera + CAN")
     box(68.5, 23.5, 12, 6, "SN65HVD230", "", fs=7.2)
-    box(87, 19, 12, 15, "ECU", "isklj. invertor," + chr(10) + "otvara SDC", fs=8.3)
+    box(87, 19, 12, 15, "ECU", "isklj. invertor," + chr(10) + "otvara SDC")
 
-    arrow(14, 34.5, 27, 34.5, "signal (K1)")
-    arrow(14, 18.5, 27, 18.5, "signal (K2)")
+    arrow(14, 34.5, 27, 34.5)
+    arrow(14, 18.5, 27, 18.5)
+    ax.text(23, 35.3, "signal (K1)", ha="center", va="bottom", fontsize=6.3)
+    ax.text(23, 19.3, "signal (K2)", ha="center", va="bottom", fontsize=6.3)
     arrow(39, 34.5, 45, 34.5)
     arrow(39, 18.5, 45, 18.5)
     arrow(61, 26.5, 68.5, 26.5, both=True)
     arrow(80.5, 26.5, 87, 26.5, both=True)
-    ax.text(83.75, 24.6, "CAN", ha="center", va="top", fontsize=6.3, color=C_MUTED)
+    ax.text(83.75, 24.6, "CAN", ha="center", va="top", fontsize=6.3)
     arrow(4, 5.5, 27, 5.5, "LV 12 V (K3)", dy=0.6)
-    # 5 V iz modula: ploči i PA2 (desno) i senzorima kroz K1/K2 (levo)
-    ax.plot([39, 53, 53], [7.5, 7.5, 14], color=C_FAULT, lw=0.9, ls=(0, (2, 2)))
-    ax.text(54, 9.5, "5 V ploči i PA2", fontsize=6.2, color=C_FAULT, va="center")
-    ax.plot([27, 20.5, 20.5], [9.0, 9.0, 31.5], color=C_FAULT, lw=0.9, ls=(0, (2, 2)))
+    # 5 V iz modula: ploči i PA2 (desno) i senzorima kroz K1/K2 (levo) - isprekidano
+    ax.plot([39, 53, 53], [7.5, 7.5, 14], color="black", lw=0.7, ls=(0, (2, 2)))
+    ax.text(54, 9.5, "5 V ploči i PA2", fontsize=6.2, va="center")
+    ax.plot([27, 17.5, 17.5], [9.0, 9.0, 31.5], color="black", lw=0.7, ls=(0, (2, 2)))
     for y in (31.5, 15.5):
-        ax.annotate("", xy=(14, y), xytext=(20.5, y),
-                    arrowprops=dict(arrowstyle="-|>", color=C_FAULT, lw=0.9, ls=(0, (2, 2)),
-                                    shrinkA=0, shrinkB=0, mutation_scale=8))
-    ax.text(21.2, 25.5, "5 V i masa" + chr(10) + "(K1, K2)", fontsize=6.0, color=C_FAULT, va="center")
+        ax.annotate("", xy=(14, y), xytext=(17.5, y),
+                    arrowprops=dict(arrowstyle="-|>", color="black", lw=0.7, ls=(0, (2, 2)),
+                                    shrinkA=0, shrinkB=0, mutation_scale=7))
+    ax.text(18.3, 25.5, "5 V," + chr(10) + "masa", fontsize=6.0, va="center")
     fig.tight_layout(pad=0.2)
     fig.savefig(path, facecolor="white")
     plt.close(fig)
